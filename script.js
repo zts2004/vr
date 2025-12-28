@@ -5,10 +5,54 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
 
+    // 停止视频播放的函数
+    function stopVideo() {
+        const bilibiliIframe = document.querySelector('.bilibili-iframe');
+        if (bilibiliIframe) {
+            try {
+                // Bilibili 播放器暂停命令
+                // 方法1: 使用 postMessage 发送暂停命令
+                bilibiliIframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'pauseVideo',
+                    args: ''
+                }), '*');
+                
+                // 方法2: 重新加载 iframe（更可靠的方法）
+                const currentSrc = bilibiliIframe.src;
+                bilibiliIframe.src = '';
+                setTimeout(() => {
+                    bilibiliIframe.src = currentSrc;
+                }, 100);
+            } catch (e) {
+                // 如果跨域限制，尝试重新加载 iframe
+                try {
+                    const currentSrc = bilibiliIframe.src;
+                    bilibiliIframe.src = '';
+                    setTimeout(() => {
+                        bilibiliIframe.src = currentSrc;
+                    }, 100);
+                } catch (err) {
+                    console.log('无法停止视频播放:', err);
+                }
+            }
+        }
+        
+        // 如果使用原生 video 标签
+        const videoElement = document.querySelector('.product-video');
+        if (videoElement) {
+            videoElement.pause();
+            videoElement.currentTime = 0; // 重置到开头
+        }
+    }
+
     // 导航链接点击事件
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
+            
+            // 停止视频播放
+            stopVideo();
             
             // 移除所有活动状态
             navLinks.forEach(l => l.classList.remove('active'));
@@ -57,6 +101,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.innerWidth > 768) {
             navMenu.classList.remove('active');
         }
+    });
+
+    // 监听板块切换，自动停止视频
+    const sectionObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                // 如果视频板块被隐藏（失去 active 类）
+                if (target.id === 'video' && !target.classList.contains('active')) {
+                    stopVideo();
+                }
+            }
+        });
+    });
+
+    // 观察所有板块的变化
+    sections.forEach(section => {
+        sectionObserver.observe(section, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
     });
 
     // 视频占位符点击事件（可以后续添加视频播放功能）
