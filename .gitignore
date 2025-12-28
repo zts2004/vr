@@ -18,4 +18,11 @@ npm-debug.log*
 *.tmp
 *.temp
 
+# 大文件 - 使用 GitHub Releases 托管
+*.mp4
+*.mov
+*.avi
+*.mkv
+宣传视频.mp4
+
 
